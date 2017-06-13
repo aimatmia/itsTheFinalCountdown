@@ -3,8 +3,84 @@ from matrix import *
 from math import *
 from gmath import *
 
-def scanline_convert(polygons, zbuffer, i, screen):
+def scanline_convert(polygons, i, screen, zbuffer):
     color = [random.randint(0, 255) for j in range(3)]
+    # print "Color: " + str(color)
+
+    # separate x and y coordintaes
+    x_values = [polygons[index + j][0] for j in range(3)]
+    y_values = [polygons[index + j][1] for j in range(3)]
+    z_values = [polygons[index + j][2] for j in range(3)]
+    pos = [0, 1, 2]
+    # print "X: " + str(x_values)
+    # print "Y: " + str(y_values)
+
+    # get indices of top and bottom
+    b_ind = y_values.index(min(y_values))
+    t_ind = y_values.index(max(y_values))
+    # print "B: " + str(b_ind)
+    # print "T: " + str(t_ind)
+    if t_ind == b_ind: # means all y_values are equal
+        t_ind = y_values.index(max(y_values[::-1]))
+
+    pos.remove(b_ind)
+    pos.remove(t_ind)
+    m_ind = pos[0]
+    # print "M: " + str(m_ind)
+
+    # get desired coordinates
+    by = y_values[b_ind]
+    ty = y_values[t_ind]
+    my = y_values[m_ind]
+
+    bx = x_values[b_ind]
+    tx = x_values[t_ind]
+    mx = x_values[m_ind]
+
+    bz = z_values[b_ind]
+    tz = z_values[t_ind]
+    mz = z_values[m_ind]
+
+    # draw lines
+    x0 = bx
+    if ty != by:
+        dx0 = (tx - bx) / float(ty - by)
+    else:
+        dx0 = 0
+
+    x1 = bx
+    if my != by:
+        dx1 = (mx - bx) / float(my - by)
+    else:
+        dx1 = 0
+    for y in range(int(by), int(my)):
+        draw_line( int(x0),
+                   int(y),
+                   bz,
+                   int(x1),
+                   int(y),
+                   tz,
+                   zbuffer, screen, color)
+
+        x0 += dx0
+        x1 += dx1
+
+    x1 = mx
+    if ty != my:
+        dx1 = (tx - mx) / float(ty - my)
+    else:
+        dx1 = 0
+    for y in range(int(my), int(ty)):
+        draw_line( int(x0),
+                   int(y),
+                   bz,
+                   int(x1),
+                   int(y),
+                   tz,
+                   zbuffer, screen, color)
+
+        x0 += dx0
+        x1 += dx1
 	
 	
 def add_polygon( polygons, x0, y0, z0, x1, y1, z1, x2, y2, z2 ):
@@ -17,33 +93,15 @@ def draw_polygons( matrix, zbuffer, screen, color ):
         print 'Need at least 3 points to draw'
         return
 
-    point = 0    
+    point = 0
     while point < len(matrix) - 2:
 
         normal = calculate_normal(matrix, point)[:]
-        print normal
+        #print normal
         if normal[2] > 0:
-            draw_line( int(matrix[point][0]),
-                       int(matrix[point][1]),
-		       int(matrix[point][2]),
-                       int(matrix[point+1][0]),
-                       int(matrix[point+1][1]),
-		       int(matrix[point+1][2]),
-                       zbuffer, screen, color)
-            draw_line( int(matrix[point+2][0]),
-                       int(matrix[point+2][1]),
-		       int(matrix[point+2][2]),
-                       int(matrix[point+1][0]),
-                       int(matrix[point+1][1]),
-		       int(matrix[point+1][2]),
-                       zbuffer, screen, color)
-            draw_line( int(matrix[point][0]),
-                       int(matrix[point][1]),
-		       int(matrix[point][2]),
-                       int(matrix[point+2][0]),
-                       int(matrix[point+2][1]),
-		       int(matrix[point+2][2]),
-                       zbuffer, screen, color)    
+            scanline_convert(matrix, point, screen, zbuffer)
+
+            #scanline(verts, screen, color);
         point+= 3
 
 
