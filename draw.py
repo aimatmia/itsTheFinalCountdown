@@ -3,9 +3,46 @@ from matrix import *
 from math import *
 from gmath import *
 
-def scanline_convert(polygons, i, screen, zbuffer):
-    color = [random.randint(0, 255) for j in range(3)]
-    # print "Color: " + str(color)
+def lighting(matrix, index, normal, shading, color):
+    color = [0, 0, 0]
+
+    if len(shading['constants']) > 0:
+        for constant in shading['constants']:
+            ka = [shading['constants'][constant]['red'][0], light_shading['constants'][constant]['green'][0], shading['constants'][constant]['blue'][0]]
+            kd = [shading['constants'][constant]['red'][1], light_shading['constants'][constant]['green'][1], shading['constants'][constant]['blue'][1]]
+            ks = [shading['constants'][constant]['red'][2], light_shading['constants'][constant]['green'][2], shading['constants'][constant]['blue'][2]]
+
+    # print ka, ks, kd
+    for c in range(3):
+
+        # print light_shading
+        location = shading['light']['l1']['location']
+        intensity = shading['light']['l1']['color']
+
+        if (len(light_shading['ambient']) > 0):
+            ambient = ambient_color(shading['ambient'][c], ka[c])
+        else:
+            ambient = ambient_color(intensity[c], ka[c])
+
+        color[c] += ambient
+
+        diffuse = diffuse_color(intensity[c], kd[c], normal, location)
+        color[c] += diffuse
+
+        specular = specular_color(intensity[c], ks[c], normal, location)
+        color[c] += specular
+
+    for c in range(3):
+        if color[c] > 255:
+            color[c] = 255
+        else:
+            color[c] = int(round(color[c]))
+
+    return color
+# ====================================================================
+def scanline_convert(polygons, index, zbuffer, screen, color, normal, shading):
+    if len(shading['light']) > 0 or len(shading['ambient']) > 0:
+        color = lighting(polygons, index, normal, shading, color)
 
     # separate x and y coordintaes
     x_values = [polygons[index + j][0] for j in range(3)]
@@ -17,11 +54,9 @@ def scanline_convert(polygons, i, screen, zbuffer):
 
     # get indices of top and bottom
     b_ind = y_values.index(min(y_values))
-    t_ind = y_values.index(max(y_values))
+    t_ind = y_values.index(max(y_values[::-1]))
     # print "B: " + str(b_ind)
     # print "T: " + str(t_ind)
-    if t_ind == b_ind: # means all y_values are equal
-        t_ind = y_values.index(max(y_values[::-1]))
 
     pos.remove(b_ind)
     pos.remove(t_ind)
@@ -43,52 +78,66 @@ def scanline_convert(polygons, i, screen, zbuffer):
 
     # draw lines
     x0 = bx
+    z0 = bz
     if ty != by:
         dx0 = (tx - bx) / float(ty - by)
+        dz0 = (tz - bz) / float(ty - by)
     else:
         dx0 = 0
+        dz0 = 0
 
     x1 = bx
+    z1 = bz
     if my != by:
         dx1 = (mx - bx) / float(my - by)
+        dz1 = (mz - bz) / float(my - by)
     else:
         dx1 = 0
+        dz1 = 0
     for y in range(int(by), int(my)):
         draw_line( int(x0),
                    int(y),
-                   bz,
+                   z0,
                    int(x1),
                    int(y),
-                   tz,
+                   z1,
                    zbuffer, screen, color)
 
         x0 += dx0
         x1 += dx1
+        z0 += dz0
+        z1 += dz1
 
     x1 = mx
+    z1 = mz
     if ty != my:
         dx1 = (tx - mx) / float(ty - my)
+        dz1 = (tz - mz) / float(ty - my)
     else:
         dx1 = 0
+        dz1 = 0
     for y in range(int(my), int(ty)):
         draw_line( int(x0),
                    int(y),
-                   bz,
+                   z0,
                    int(x1),
                    int(y),
-                   tz,
+                   z1,
                    zbuffer, screen, color)
 
         x0 += dx0
         x1 += dx1
-	
+        z0 += dz0
+        z1 += dz1
+
+    return z0
 	
 def add_polygon( polygons, x0, y0, z0, x1, y1, z1, x2, y2, z2 ):
     add_point(polygons, x0, y0, z0);
     add_point(polygons, x1, y1, z1);
     add_point(polygons, x2, y2, z2);
 
-def draw_polygons( matrix, zbuffer, screen, color ):
+def draw_polygons( matrix, zbuffer, screen, color, shading ):
     if len(matrix) < 2:
         print 'Need at least 3 points to draw'
         return
@@ -99,9 +148,9 @@ def draw_polygons( matrix, zbuffer, screen, color ):
         normal = calculate_normal(matrix, point)[:]
         #print normal
         if normal[2] > 0:
-            scanline_convert(matrix, point, screen, zbuffer)
+            polygon_color = [50, 50, 50]
 
-            #scanline(verts, screen, color);
+            scanline_convert(matrix, point, zbuffer, screen, polygon_color, normal, shading)
         point+= 3
 
 
@@ -386,9 +435,10 @@ def draw_line( x0, y0, z0, x1, y1, z1, zbuffer, screen, color ):
             x+= dx_E
             y+= dy_E
             d+= d_E
+
+        z += dz
         loop_start+= 1
 
-
-    plot(zbuffer, screen, color, x, y, z)
+    plot( screen, zbuffer, color, x, y, z )
 
 #end draw_line
