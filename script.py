@@ -134,8 +134,7 @@ def run(filename):
       stack = [ [x[:] for x in tmp] ]
       print "stack", stack[-1]
       screen = new_screen()
-      zb = new_zbuffer()
-      clear_zbuffer(zb);
+      zbuff = new_zbuffer()
       tmp = []
       step = 0.1
       val = 1  
@@ -150,19 +149,19 @@ def run(filename):
                       args[0], args[1], args[2],
                       args[3], args[4], args[5])
               matrix_mult( stack[-1], tmp )
-              draw_polygons(tmp, zb, screen, color, shading)
+              draw_polygons(tmp, zbuff, screen, color, shading)
               tmp = []
           elif c == 'sphere':
               add_sphere(tmp,
                         args[0], args[1], args[2], args[3], step)
               matrix_mult( stack[-1], tmp )
-              draw_polygons(tmp, zb, screen, color, shading)
+              draw_polygons(tmp, zbuff, screen, color, shading)
               tmp = []
           elif c == 'torus':
               add_torus(tmp,
                         args[0], args[1], args[2], args[3], args[4], step)
               matrix_mult( stack[-1], tmp )
-              draw_polygons(tmp, zb, screen, color, shading)
+              draw_polygons(tmp, zbuff, screen, color, shading)
               tmp = []
               
           elif c == 'set':
@@ -219,11 +218,11 @@ def run(filename):
               save_extension(screen, args[0])
             
           if anime:
-            fname = 'anim/%s%03d.png' % (basename, f)
+            fname = 'anim/%s%03d.png' % (basename, frame)
             print 'Saving frame: ' + fname
             save_extension( screen, fname )
             
-          clear_zbuffer(zb)
+          clear_zbuffer(zbuff)
               
     if anime:
         make_animation(name)            
