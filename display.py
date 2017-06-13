@@ -41,7 +41,7 @@ def clear_screen( screen ):
             
 def clear_zbuffer( zbuff ):
     for y in range( len(zbuff) ):
-        for x in range( len(zb[y]) ):
+        for x in range( len(zbuff[y]) ):
             zbuff[y][x] = float('-inf')
 
 def save_ppm( screen, fname ):
