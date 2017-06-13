@@ -225,4 +225,4 @@ def run(filename):
           clear_zbuffer(zbuff)
               
     if anime:
-        make_animation(name)            
+        make_animation(basename)            
