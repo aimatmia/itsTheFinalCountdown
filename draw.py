@@ -3,6 +3,10 @@ from matrix import *
 from math import *
 from gmath import *
 
+def scanline_convert(polygons, zbuffer, i, screen):
+    color = [random.randint(0, 255) for j in range(3)]
+	
+	
 def add_polygon( polygons, x0, y0, z0, x1, y1, z1, x2, y2, z2 ):
     add_point(polygons, x0, y0, z0);
     add_point(polygons, x1, y1, z1);
