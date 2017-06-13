@@ -17,20 +17,30 @@ from draw import *
   jdyrlandweaver
   ==================== """
 def first_pass( commands ):
-    basename = "DEFAULT"
-    num_frames = 0
-    for c in commands:
-        if c[0] == 'basename':
-            basename = c[1]
-        elif c[0] == 'frames':
-            if len([x for x in commands if x[0] == 'basename'])== 0:
-                print "Name is \"DEFAULT\""
-            num_frames = int(c[1])
-        elif c[0] == 'vary':
-            if len([x for x in commands if x[0] == 'frames']) == 0:
-                print "No frames with 'vary' -> Exiting."
-    return (basename, num_frames)
+    frameCheck = varyCheck = nameCheck = False
+    name = ''
+    num_frames = 1
 
+    for command in commands:
+
+        if command[0] == 'frames':
+            num_frames = command[1]
+            frameCheck = True
+        elif command[0] == 'vary':
+            varyCheck = True
+        elif command[0] == 'basename':
+            name = command[1]
+            nameCheck = True
+
+    if varyCheck and not frameCheck:
+        print 'Error: Vary command found without setting number of frames!'
+        exit()
+
+    elif frameCheck and not nameCheck:
+        print 'Animation code present but basename was not set. Using "frame" as basename.'
+        name = 'frame'
+
+    return (name, num_frames)
 
 """======== second_pass( commands ) ==========
   In order to set the knobs for animation, we need to keep
@@ -48,10 +58,6 @@ def first_pass( commands ):
   ===================="""
 def second_pass( commands, num_frames):
     frames = [ {} for i in range(num_frames) ]
-    cons = {};
-    sources = {};
-    amb = {};
-    shading = "none"
 
     for command in commands:
         if command[0] == 'vary':
@@ -80,6 +86,27 @@ def second_pass( commands, num_frames):
                 #print 'knob: ' + knob_name + '\tvalue: ' + str(frames[f][knob_name])
     return frames
 
+def get_light_shading(symbols):
+    lights = {}
+    constants = {}
+    ambient = []
+    shade_type = ""
+
+    for symbol in symbols:
+        # see mdl.py for more info
+        args = symbols[symbol]
+
+        if args[0] == 'light':
+            lights[symbol] = args[1] # {location: , color: }
+        if args[0] == 'constants':
+            constants[symbol] = args[1] # {red: , green:, blue: }
+
+        if symbol == 'ambient':
+            ambient = [int(args[1]), int(args[2]), int(args[3])]
+        if symbol == 'shading':
+            shade_type = args[1]
+
+    return {'light': lights, 'constants': constants, 'ambient': ambient, 'shading': shade_type}
 
 def run(filename):
     """
@@ -97,10 +124,7 @@ def run(filename):
     anime = num_frames > 1
     knobs = second_pass(commands, num_frames)
 
-    #print symbols
-    sources = [symbols[i][1] for i in symbols if symbols[i][0] = "light"]
-    if "shading" in symbols:
-        shading = symbols["shading"][1];
+    shading = get_light_shading(symbols)
         
     for frame in range(num_frames):
 
@@ -126,19 +150,19 @@ def run(filename):
                       args[0], args[1], args[2],
                       args[3], args[4], args[5])
               matrix_mult( stack[-1], tmp )
-              draw_polygons(tmp, zb, screen, color, symbols[command[-1]][1], sources, shading))
+              draw_polygons(tmp, zb, screen, color, shading)
               tmp = []
           elif c == 'sphere':
               add_sphere(tmp,
                         args[0], args[1], args[2], args[3], step)
               matrix_mult( stack[-1], tmp )
-              draw_polygons(tmp, screen, color)
+              draw_polygons(tmp, zb, screen, color, shading)
               tmp = []
           elif c == 'torus':
               add_torus(tmp,
                         args[0], args[1], args[2], args[3], args[4], step)
               matrix_mult( stack[-1], tmp )
-              draw_polygons(tmp, screen, color)
+              draw_polygons(tmp, zb, screen, color, shading)
               tmp = []
               
           elif c == 'set':
@@ -198,6 +222,8 @@ def run(filename):
             fname = 'anim/%s%03d.png' % (name, f)
             print 'Saving frame: ' + fname
             save_extension( screen, fname )
+            
+          clear_zbuffer(zb)
               
     if anime:
         make_animation(name)            
