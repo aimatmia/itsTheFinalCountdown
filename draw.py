@@ -2,6 +2,7 @@ from display import *
 from matrix import *
 from math import *
 from gmath import *
+import random
 
 def lighting(matrix, index, normal, shading, color):
     color = [0, 0, 0]
