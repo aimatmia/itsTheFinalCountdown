@@ -296,7 +296,7 @@ def draw_line( x0, y0, z0, x1, y1, z1, zbuffer, screen, color ):
             d_NE = A - B
 
 
-     else: #octants 2/7
+    else: #octants 2/7
         tall = True
         dx_E = 0
         dx_NE = 1
