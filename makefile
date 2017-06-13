@@ -1,4 +1,4 @@
-test: script.mdl lex.py main.py matrix.py mdl.py display.py draw.py gmath.py yacc.py
+test: simple_anim.mdl script.mdl lex.py main.py matrix.py mdl.py display.py draw.py gmath.py yacc.py
 	python main.py script.mdl
 
 clean:
