@@ -195,5 +195,9 @@ def run(filename):
               save_extension(screen, args[0])
             
           if anime:
-              "%03d"%12
-              save_extension(screen, "anim/%s%03d" % (basename, frame))    
+            fname = 'anim/%s%03d.png' % (name, f)
+            print 'Saving frame: ' + fname
+            save_extension( screen, fname )
+              
+    if anime:
+        make_animation(name)            
