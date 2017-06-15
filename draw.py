@@ -41,10 +41,8 @@ def lighting(matrix, index, normal, shading, color):
 
     return color
 # ====================================================================
-def scanline_convert(polygons, index, zbuffer, screen, color, normal, shading):
-    if len(shading['light']) > 0 or len(shading['ambient']) > 0:
-        color = lighting(polygons, index, normal, shading, color)
-
+def scanline_convert(polygons, index, zbuffer, screen, color):
+	
     # separate x and y coordintaes
     x_values = [polygons[index + j][0] for j in range(3)]
     y_values = [polygons[index + j][1] for j in range(3)]
@@ -130,8 +128,6 @@ def scanline_convert(polygons, index, zbuffer, screen, color, normal, shading):
         x1 += dx1
         z0 += dz0
         z1 += dz1
-
-    return z0
 	
 def add_polygon( polygons, x0, y0, z0, x1, y1, z1, x2, y2, z2 ):
     add_point(polygons, x0, y0, z0);
@@ -149,9 +145,8 @@ def draw_polygons( matrix, zbuffer, screen, color, shading ):
         normal = calculate_normal(matrix, point)[:]
         #print normal
         if normal[2] > 0:
-            polygon_color = [50, 50, 50]
-
-            scanline_convert(matrix, point, zbuffer, screen, polygon_color, normal, shading)
+	    color = get_color(normal, lighting_info, lighting_name)
+            scanline_convert(matrix, point, zbuffer, screen, color)
         point+= 3
 
 
