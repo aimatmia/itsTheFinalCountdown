@@ -95,17 +95,14 @@ def get_light_shading(symbols):
     for symbol in symbols:
         # see mdl.py for more info
         args = symbols[symbol]
-
         if args[0] == 'light':
             lights[symbol] = args[1] # {location: , color: }
-        if args[0] == 'constants':
+        elif args[0] == 'constants':
             constants[symbol] = args[1] # {red: , green:, blue: }
-
-        if symbol == 'ambient':
+        elif symbol == 'ambient':
             ambient = [int(args[1]), int(args[2]), int(args[3])]
-        if symbol == 'shading':
+        elif symbol == 'shading':
             shade_type = args[1]
-
     return {'light': lights, 'constants': constants, 'ambient': ambient, 'shading': shade_type}
 
 def run(filename):
@@ -115,17 +112,21 @@ def run(filename):
     color = [255, 255, 255]
 
     p = mdl.parseFile(filename)
+    print filename
     if p:
         (commands, symbols) = p
     else:
         print "Parsing failed."
         return
+    print commands
+    print symbols
+    shading = get_light_shading(symbols)
+    print "shading...", shading
+        
     (basename, num_frames) = first_pass(commands)
     anime = num_frames > 1
     knobs = second_pass(commands, num_frames)
 
-    shading = get_light_shading(symbols)
-        
     for frame in range(num_frames):
 
       tmp = new_matrix()
@@ -149,19 +150,20 @@ def run(filename):
                       args[0], args[1], args[2],
                       args[3], args[4], args[5])
               matrix_mult( stack[-1], tmp )
-              draw_polygons(tmp, zbuff, screen, color, shading)
+              draw_polygons(tmp, zbuff, screen, args[6], shading)
               tmp = []
           elif c == 'sphere':
+              print "color  ", color, args
               add_sphere(tmp,
                         args[0], args[1], args[2], args[3], step)
               matrix_mult( stack[-1], tmp )
-              draw_polygons(tmp, zbuff, screen, color, shading)
+              draw_polygons(tmp, zbuff, screen, args[4], shading)
               tmp = []
           elif c == 'torus':
               add_torus(tmp,
                         args[0], args[1], args[2], args[3], args[4], step)
               matrix_mult( stack[-1], tmp )
-              draw_polygons(tmp, zbuff, screen, color, shading)
+              draw_polygons(tmp, zbuff, screen, args[5], shading)
               tmp = []
               
           elif c == 'set':
