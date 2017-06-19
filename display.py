@@ -27,7 +27,7 @@ def new_zbuffer( width = XRES, height = YRES ):
         zbuff.append( row )
     return zbuff
 
-def plot( zbuffer, screen, color, x, y ):
+def plot( zbuffer, screen, color, x, y , z):
     newy = YRES - 1 - y
     if ( x >= 0 and x < XRES and newy >= 0 and newy < YRES ):
         if z >= zbuffer[newy][x]:
