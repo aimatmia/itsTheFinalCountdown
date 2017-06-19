@@ -4,45 +4,11 @@ from math import *
 from gmath import *
 import random
 
-def lighting(matrix, index, normal, shading, color):
-    color = [0, 0, 0]
 
-    if len(shading['constants']) > 0:
-        for constant in shading['constants']:
-            ka = [shading['constants'][constant]['red'][0], light_shading['constants'][constant]['green'][0], shading['constants'][constant]['blue'][0]]
-            kd = [shading['constants'][constant]['red'][1], light_shading['constants'][constant]['green'][1], shading['constants'][constant]['blue'][1]]
-            ks = [shading['constants'][constant]['red'][2], light_shading['constants'][constant]['green'][2], shading['constants'][constant]['blue'][2]]
+def scanline_convert(polygons, index, zbuffer, screen, color, normal, shading):
+    if len(shading['light']) > 0 or len(shading['ambient']) > 0:
+        color = colorize(normal, shading, color)
 
-    # print ka, ks, kd
-    for c in range(3):
-
-        # print light_shading
-        location = shading['light']['l1']['location']
-        intensity = shading['light']['l1']['color']
-
-        if (len(light_shading['ambient']) > 0):
-            ambient = ambient_color(shading['ambient'][c], ka[c])
-        else:
-            ambient = ambient_color(intensity[c], ka[c])
-
-        color[c] += ambient
-
-        diffuse = diffuse_color(intensity[c], kd[c], normal, location)
-        color[c] += diffuse
-
-        specular = specular_color(intensity[c], ks[c], normal, location)
-        color[c] += specular
-
-    for c in range(3):
-        if color[c] > 255:
-            color[c] = 255
-        else:
-            color[c] = int(round(color[c]))
-
-    return color
-# ====================================================================
-def scanline_convert(polygons, index, zbuffer, screen, color):
-	
     # separate x and y coordintaes
     x_values = [polygons[index + j][0] for j in range(3)]
     y_values = [polygons[index + j][1] for j in range(3)]
@@ -128,6 +94,8 @@ def scanline_convert(polygons, index, zbuffer, screen, color):
         x1 += dx1
         z0 += dz0
         z1 += dz1
+
+    return z0
 	
 def add_polygon( polygons, x0, y0, z0, x1, y1, z1, x2, y2, z2 ):
     add_point(polygons, x0, y0, z0);
@@ -143,10 +111,11 @@ def draw_polygons( matrix, zbuffer, screen, color, shading ):
     while point < len(matrix) - 2:
 
         normal = calculate_normal(matrix, point)[:]
-        #print normal
+        print "normal", len(matrix) 
+        print normal
         if normal[2] > 0:
-	    color = get_color(normal, lighting_info, lighting_name)
-            scanline_convert(matrix, point, zbuffer, screen, color)
+            polygon_color = color
+            scanline_convert(matrix, point, zbuffer, screen, polygon_color, normal, shading)
         point+= 3
 
 
@@ -154,7 +123,6 @@ def add_box( polygons, x, y, z, width, height, depth ):
     x1 = x + width
     y1 = y - height
     z1 = z - depth
-
     #front
     add_polygon(polygons, x, y, z, x1, y1, z, x1, y, z);
     add_polygon(polygons, x, y, z, x, y1, z, x1, y1, z);
@@ -432,9 +400,9 @@ def draw_line( x0, y0, z0, x1, y1, z1, zbuffer, screen, color ):
             y+= dy_E
             d+= d_E
 
-        z += dz
         loop_start+= 1
 
     plot( screen, zbuffer, color, x, y, z )
 
 #end draw_line
+
