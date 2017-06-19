@@ -144,6 +144,22 @@ def p_statement_basename(p):
     """statement : BASENAME TEXT"""
     commands.append(p[1:])
 
+def p_statement_ambient(p):
+    """statement : AMBIENT INT INT INT"""
+    symbols[p[1]] = p[1:]
+
+def p_statement_light(p):
+    """statement : LIGHT SYMBOL INT INT INT INT INT INT"""
+    symbols[p[1]] = ['light', {'location': p[3:6], 'color': p[6:]}] 
+
+def p_statement_constants(p):
+    """statement : CONSTANTS SYMBOL NUMBER NUMBER NUMBER NUMBER NUMBER NUMBER NUMBER NUMBER NUMBER"""
+    symbols[p[1]] = ['constants', {'red': p[3:6], 'green': p[6:9], 'blue': p[9:]}]
+
+def p_statement_shading(p):
+    """statement : SHADING SHADING_TYPE"""
+    symbols[p[2]] = p[1:]
+
 def p_statement_vary(p):
     """statement : VARY SYMBOL INT INT NUMBER NUMBER"""
     commands.append(p[1:])
@@ -184,20 +200,27 @@ def p_statement_knobs(p):
         symbols[p[2]] = ['knob', 0]
         
 def p_statement_sphere(p):
+
     """statement : SPHERE NUMBER NUMBER NUMBER NUMBER INT INT
-                 | SPHERE NUMBER NUMBER NUMBER NUMBER"""
+                 | SPHERE NUMBER NUMBER NUMBER NUMBER
+	         | SPHERE SYMBOL NUMBER NUMBER NUMBER NUMBER"""
     if len(p) == 6:
-        commands.append((p[1], p[2], p[3], p[4], p[5], None))
+        commands.append((p[1], p[2], p[3], p[4], p[5],  None))
+    elif len(p) == 7:
+        commands.append((p[1], p[3], p[4], p[5], p[6], p[2]))
     else:
-        commands.append((p[1], p[2], p[3], p[4], p[5], [p[6], p[7]]))
+	commands.append((p[1], p[2], p[3], p[4], p[5], [p[6], p[7]]))
 
 def p_statement_torus(p):
     """statement : TORUS NUMBER NUMBER NUMBER NUMBER NUMBER INT INT
-                 | TORUS NUMBER NUMBER NUMBER NUMBER NUMBER"""
+                 | TORUS NUMBER NUMBER NUMBER NUMBER NUMBER
+	         | TORUS SYMBOL NUMBER NUMBER NUMBER NUMBER NUMBER"""
     if len(p) == 7:
         commands.append((p[1], p[2], p[3], p[4], p[5], p[6], None))
-    else:
-        commands.append((p[1], p[2], p[3], p[4], p[5], p[6], [p[7], p[8]]))
+    elif len(p) == 8:
+        commands.append((p[1], p[3], p[4], p[5], p[6], p[7], p[2]))
+    else: 
+	commands.append((p[1], p[2], p[3], p[4], p[5], p[6], [p[7], p[8]]))
 
 def p_statement_box(p):
     "statement : BOX NUMBER NUMBER NUMBER NUMBER NUMBER NUMBER"
